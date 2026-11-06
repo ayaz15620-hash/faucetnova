@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>FaucetNova — Crypto Rewards Hub</title>
+  <meta name="description" content="FaucetNova is building a simple crypto rewards experience. Follow launch updates.">
+  <style>
+    :root{--bg:#07111f;--panel:#0d1b2c;--panel2:#10243a;--text:#edf6ff;--muted:#9bb0c6;--green:#48e0a4;--cyan:#54c9f5;--line:#20364d}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% 0%,#12314a 0,transparent 32%),var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    .wrap{width:min(1060px,92%);margin:auto}.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:.2px}.logo{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--cyan));color:#061421;font-weight:900}
+    .pill{border:1px solid #31516b;border-radius:999px;padding:7px 12px;color:#b9d2e6;font-size:.78rem}
+    .hero{padding:68px 0 48px;text-align:center}.eyebrow{color:var(--green);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:.76rem}
+    h1{font-size:clamp(2.5rem,8vw,5rem);line-height:1.02;letter-spacing:-2px;margin:16px 0;background:linear-gradient(90deg,#fff,var(--green),var(--cyan));background-clip:text;-webkit-background-clip:text;color:transparent}
+    .lead{max-width:650px;margin:0 auto;color:var(--muted);font-size:1.08rem}
+    .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}.btn{display:inline-block;padding:12px 19px;border-radius:12px;text-decoration:none;font-weight:750}
+    .primary{background:linear-gradient(100deg,var(--green),var(--cyan));color:#071521}.secondary{border:1px solid #36536c;color:var(--text)}
+    .notice{margin:30px auto 0;max-width:680px;padding:13px 16px;background:#18283a;border:1px solid #38516a;border-radius:12px;color:#c4d7e8;font-size:.9rem}
+    .section-title{text-align:center;margin:32px 0 18px;font-size:1.55rem}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding-bottom:55px}
+    .card{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:22px}
+    .icon{font-size:1.55rem}.card h3{margin:10px 0 5px}.card p{color:var(--muted);margin:0;font-size:.94rem}
+    .status{display:inline-block;margin-top:15px;color:#f6d58a;background:#44371d;padding:4px 9px;border-radius:999px;font-size:.72rem;font-weight:700}
+    footer{border-top:1px solid var(--line);padding:22px 0;color:var(--muted);font-size:.85rem;text-align:center}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}.hero{padding:52px 0 36px}.nav{padding:16px 0}}
+  </style>
+</head>
+<body>
+  <header class="wrap nav">
+    <div class="brand"><span class="logo">N</span> FaucetNova</div>
+    <span class="pill">LAUNCH IN DEVELOPMENT</span>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Your crypto rewards hub</div>
+      <h1>Small steps.<br>Big possibilities.</h1>
+      <p class="lead">A simple crypto rewards experience is being built. Follow along as FaucetNova prepares its faucet, community and reward features.</p>
+      <div class="actions">
+        <a class="btn primary" href="#features">Explore the plan</a>
+        <a class="btn secondary" href="#updates">Launch updates</a>
+      </div>
+      <div class="notice" id="updates"><strong>Honest launch status:</strong> Faucet claims, balances, advertisements and withdrawals are not live yet. No deposits are required to follow project updates.</div>
+    </section>
+    <h2 class="section-title" id="features">What we're building</h2>
+    <section class="grid">
+      <article class="card"><div class="icon">💧</div><h3>Daily Faucet</h3><p>A simple claim flow with clear rules and verified reward limits.</p><span class="status">Coming soon</span></article>
+      <article class="card"><div class="icon">👛</div><h3>Account Dashboard</h3><p>A personal area to view account details and, once enabled, confirmed reward records.</p><span class="status">Coming soon</span></article>
+      <article class="card"><div class="icon">🤝</div><h3>Referral Program</h3><p>Optional referral features with transparent terms and anti-abuse checks.</p><span class="status">Coming soon</span></article>
+    </section>
+  </main>
+  <footer><div class="wrap">© <span id="year"></span> FaucetNova. Built transparently. Crypto rewards are not guaranteed.</div></footer>
+  <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+</body>
+</html>
