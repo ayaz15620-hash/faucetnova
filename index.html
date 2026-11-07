@@ -5,41 +5,131 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FaucetNova - Crypto Rewards</title>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#07111f;color:#edf6ff;font-family:Arial,sans-serif;text-align:center;padding:25px}
-.card{max-width:450px;margin:50px auto;background:#10243a;padding:28px;border-radius:18px}
-h1{color:#48e0a4}
-p{color:#b9c9d8}
-button{padding:13px 20px;border:0;border-radius:10px;margin:10px;background:#48e0a4;color:#07111f;font-weight:bold;font-size:16px;cursor:pointer}
-#status{margin-top:20px;overflow-wrap:anywhere}
-.hidden{display:none}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #07111f;
+  color: #edf6ff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+.card {
+  max-width: 450px;
+  margin: 50px auto;
+  background: #10243a;
+  padding: 28px;
+  border-radius: 18px;
+  box-shadow: 0 10px 35px #0005;
+}
+
+h1 {
+  color: #48e0a4;
+  font-size: 32px;
+}
+
+p {
+  color: #b9c9d8;
+  overflow-wrap: anywhere;
+}
+
+button {
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 10px;
+  margin: 10px;
+  background: #48e0a4;
+  color: #07111f;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#status {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+
+.hidden {
+  display: none;
+}
+
+.balance-box {
+  background: #071a2b;
+  padding: 18px;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.balance {
+  color: #48e0a4;
+  font-size: 27px;
+  font-weight: bold;
+}
 </style>
 </head>
+
 <body>
+
 <div class="card">
+
 <h1>FaucetNova</h1>
 <p>Your Crypto Rewards Hub</p>
 
 <div id="login">
+
 <p>Login or create your account with Google.</p>
-<button id="googleBtn">Continue with Google</button>
+
+<button id="googleBtn">
+Continue with Google
+</button>
+
 </div>
 
 <div id="dashboard" class="hidden">
+
 <h2>Welcome!</h2>
+
 <p id="userName"></p>
 <p id="userEmail"></p>
+
+<div class="balance-box">
+<p>Your USDT Balance</p>
+<div class="balance">
+<span id="balance">0.00</span> USDT
+</div>
+</div>
+
 <p>Your FaucetNova account is connected.</p>
-  <p><strong>Balance: <span id="balance">0.00</span> USDT</strong></p>
-<button id="logoutBtn">Logout</button>
+
+<button id="logoutBtn">
+Logout
+</button>
+
 </div>
 
 <p id="status">Connecting to Firebase...</p>
+
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+
+// FIREBASE IMPORTS
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
+
 import {
   getAuth,
   GoogleAuthProvider,
@@ -47,12 +137,17 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
+
 import {
   getFirestore,
+  getDoc,
   doc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+
+// FIREBASE CONFIGURATION
 
 const firebaseConfig = {
   apiKey: "AIzaSyDppgFZVrrTUNPEkbnssY7fHBaLaJ7cTBQ",
@@ -64,59 +159,123 @@ const firebaseConfig = {
   measurementId: "G-Q7JXW2TP4H"
 };
 
+
+// INITIALIZE FIREBASE
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+
+// HTML ELEMENTS
+
 const status = document.getElementById("status");
 const login = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
+const googleBtn = document.getElementById("googleBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-document.getElementById("googleBtn").addEventListener("click", async () => {
+
+// GOOGLE LOGIN
+
+googleBtn.addEventListener("click", async () => {
+
   try {
+
+    googleBtn.disabled = true;
     status.textContent = "Opening Google sign-in...";
+
     await signInWithPopup(auth, provider);
+
   } catch (error) {
+
     status.textContent = "Login error: " + error.message;
+
+  } finally {
+
+    googleBtn.disabled = false;
+
   }
+
 });
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
+
+// LOGOUT
+
+logoutBtn.addEventListener("click", async () => {
+
   try {
+
     await signOut(auth);
     status.textContent = "You are logged out.";
+
   } catch (error) {
-    status.textContent = error.message;
+
+    status.textContent = "Logout error: " + error.message;
+
   }
+
 });
+
+
+// CHECK LOGIN AND SAVE USER PROFILE
 
 onAuthStateChanged(auth, async (user) => {
+
   if (user) {
+
     login.classList.add("hidden");
     dashboard.classList.remove("hidden");
-    document.getElementById("userName").textContent = user.displayName || "User";
-    document.getElementById("userEmail").textContent = user.email || "";
+
+    document.getElementById("userName").textContent =
+      user.displayName || "User";
+
+    document.getElementById("userEmail").textContent =
+      user.email || "";
+
+    status.textContent = "Connecting your account...";
 
     try {
-      await setDoc(doc(db, "users", user.uid), {
-        name: user.displayName || "",
-        email: user.email || "",
-        photoURL: user.photoURL || "",
-        balance: 0,
-        createdAt: serverTimestamp()
-      }, { merge: true });
+
+      const userRef = doc(db, "users", user.uid);
+
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+
+        await setDoc(userRef, {
+
+          name: user.displayName || "User",
+          email: user.email || "",
+          photoURL: user.photoURL || "",
+          createdAt: serverTimestamp()
+
+        });
+
+      }
 
       status.textContent = "Account connected successfully!";
+
     } catch (error) {
-      status.textContent = "Profile save error: " + error.message;
+
+      status.textContent =
+        "Profile save error: " + error.message;
+
     }
+
   } else {
+
     login.classList.remove("hidden");
     dashboard.classList.add("hidden");
-    status.textContent = "Please sign in to continue.";
+
+    status.textContent = "Please login with Google.";
+
   }
+
 });
+
 </script>
+
 </body>
 </html>
