@@ -248,6 +248,7 @@ onAuthStateChanged(auth, async (user) => {
 
           name: user.displayName || "User",
           email: user.email || "",
+          balance: 0,
           photoURL: user.photoURL || "",
           createdAt: serverTimestamp()
 
