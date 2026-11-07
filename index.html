@@ -103,6 +103,7 @@ onAuthStateChanged(auth, async (user) => {
         name: user.displayName || "",
         email: user.email || "",
         photoURL: user.photoURL || "",
+        balance: 0,
         createdAt: serverTimestamp()
       }, { merge: true });
 
