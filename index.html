@@ -244,17 +244,22 @@ onAuthStateChanged(auth, async (user) => {
 
       if (!userSnap.exists()) {
 
-        await setDoc(userRef, {
+  await setDoc(userRef, {
+    name: user.displayName || "User",
+    email: user.email || "",
+    balance: 0,
+    photoURL: user.photoURL || "",
+    createdAt: serverTimestamp()
+  });
 
-          name: user.displayName || "User",
-          email: user.email || "",
-          balance: 0,
-          photoURL: user.photoURL || "",
-          createdAt: serverTimestamp()
+} else if (userSnap.data().balance === undefined) {
 
-        });
+  await setDoc(userRef, {
+    balance: 0
+  }, { merge: true });
+      
 
-      }
+}
 
       status.textContent = "Account connected successfully!";
 
