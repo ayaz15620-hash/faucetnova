@@ -7,37 +7,29 @@
 <title>FaucetNova - Crypto Rewards</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
+  padding: 20px;
   background: #07111f;
   color: #edf6ff;
   font-family: Arial, sans-serif;
   text-align: center;
-  padding: 20px;
 }
 
 .card {
   max-width: 450px;
   margin: 50px auto;
-  background: #10243a;
   padding: 28px;
+  background: #10243a;
   border-radius: 18px;
   box-shadow: 0 10px 35px #0005;
 }
 
-h1 {
-  color: #48e0a4;
-  font-size: 32px;
-}
+h1 { color: #48e0a4; font-size: 32px; }
 
-p {
-  color: #b9c9d8;
-  overflow-wrap: anywhere;
-}
+p { color: #b9c9d8; overflow-wrap: anywhere; }
 
 button {
   padding: 13px 20px;
@@ -46,24 +38,17 @@ button {
   margin: 10px;
   background: #48e0a4;
   color: #07111f;
-  font-weight: bold;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
 }
 
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-#status {
-  margin-top: 20px;
-  overflow-wrap: anywhere;
-}
-
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .balance-box {
   background: #071a2b;
@@ -77,64 +62,58 @@ button:disabled {
   font-size: 27px;
   font-weight: bold;
 }
+
+#status, #claimStatus {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
 </style>
 </head>
 
 <body>
-
 <div class="card">
 
 <h1>FaucetNova</h1>
 <p>Your Crypto Rewards Hub</p>
 
 <div id="login">
-
-<p>Login or create your account with Google.</p>
-
-<button id="googleBtn">
-Continue with Google
-</button>
-
+  <p>Login or create your account with Google.</p>
+  <button id="googleBtn">Continue with Google</button>
 </div>
 
 <div id="dashboard" class="hidden">
 
-<h2>Welcome!</h2>
+  <h2>Welcome!</h2>
+  <p id="userName"></p>
+  <p id="userEmail"></p>
 
-<p id="userName"></p>
-<p id="userEmail"></p>
+  <div class="balance-box">
+    <p>Your USDT Balance</p>
+    <div class="balance">
+      <span id="balance">0.0000</span> USDT
+    </div>
+  </div>
 
-<div class="balance-box">
-<p>Your USDT Balance</p>
-<div class="balance">
-<span id="balance">0.00</span> USDT
-</div>
-</div>
-  
-<div class="balance-box">
-  <p>Faucet Claim</p>
-  <h3>Reward: 0.0001 USDT</h3> 
-  <p id="timer">Ready to claim!</p>
-  <button id="claimBtn">CLAIM NOW</button>
-  <p id="claimStatus"></p>
-  <p>Total claims: Unlimited</p>
-</div>
+  <div class="balance-box">
+    <p>Faucet Claim</p>
+    <h3>Reward: 0.0001 USDT</h3>
+    <p id="timer">60-second cooldown</p>
+    <button id="claimBtn" disabled>CLAIM NOW</button>
+    <p id="claimStatus">
+      Secure claim system is not connected yet.
+    </p>
+    <p>Total claims: Unlimited</p>
+  </div>
 
-<p>Your FaucetNova account is connected.</p>
-
-<button id="logoutBtn">
-Logout
-</button>
+  <p>Your FaucetNova account is connected.</p>
+  <button id="logoutBtn">Logout</button>
 
 </div>
 
 <p id="status">Connecting to Firebase...</p>
-
 </div>
 
 <script type="module">
-
-// FIREBASE IMPORTS
 
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
@@ -155,9 +134,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
-
-// FIREBASE CONFIGURATION
-
 const firebaseConfig = {
   apiKey: "AIzaSyDppgFZVrrTUNPEkbnssY7fHBaLaJ7cTBQ",
   authDomain: "faucetnova-6d55e.firebaseapp.com",
@@ -168,72 +144,43 @@ const firebaseConfig = {
   measurementId: "G-Q7JXW2TP4H"
 };
 
-
-// INITIALIZE FIREBASE
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
-
-
-// HTML ELEMENTS
 
 const status = document.getElementById("status");
 const login = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
 const googleBtn = document.getElementById("googleBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-
-
-// GOOGLE LOGIN
+const claimBtn = document.getElementById("claimBtn");
+const claimStatus = document.getElementById("claimStatus");
+const balanceDisplay = document.getElementById("balance");
 
 googleBtn.addEventListener("click", async () => {
-
   try {
-
     googleBtn.disabled = true;
     status.textContent = "Opening Google sign-in...";
-
     await signInWithPopup(auth, provider);
-
   } catch (error) {
-
     status.textContent = "Login error: " + error.message;
-
   } finally {
-
     googleBtn.disabled = false;
-
   }
-
 });
-
-
-// LOGOUT
 
 logoutBtn.addEventListener("click", async () => {
-
   try {
-
     await signOut(auth);
     status.textContent = "You are logged out.";
-
   } catch (error) {
-
     status.textContent = "Logout error: " + error.message;
-
   }
-
 });
 
-
-// CHECK LOGIN AND SAVE USER PROFILE
-
 onAuthStateChanged(auth, async (user) => {
-
   if (user) {
-
     login.classList.add("hidden");
     dashboard.classList.remove("hidden");
 
@@ -246,51 +193,38 @@ onAuthStateChanged(auth, async (user) => {
     status.textContent = "Connecting your account...";
 
     try {
-
       const userRef = doc(db, "users", user.uid);
-
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          name: user.displayName || "User",
+          email: user.email || "",
+          balance: 0,
+          photoURL: user.photoURL || "",
+          createdAt: serverTimestamp()
+        });
 
-  await setDoc(userRef, {
-    name: user.displayName || "User",
-    email: user.email || "",
-    balance: 0,
-    photoURL: user.photoURL || "",
-    createdAt: serverTimestamp()
-  });
-
-} else if (userSnap.data().balance === undefined) {
-
-  await setDoc(userRef, {
-    balance: 0
-  }, { merge: true });
-      
-
-}
+        balanceDisplay.textContent = "0.0000";
+      } else {
+        const data = userSnap.data();
+        balanceDisplay.textContent =
+          Number(data.balance || 0).toFixed(4);
+      }
 
       status.textContent = "Account connected successfully!";
-
     } catch (error) {
-
-      status.textContent =
-        "Profile save error: " + error.message;
-
+      status.textContent = "Profile error: " + error.message;
     }
 
   } else {
-
     login.classList.remove("hidden");
     dashboard.classList.add("hidden");
-
+    claimBtn.disabled = true;
     status.textContent = "Please login with Google.";
-
   }
-
 });
 
 </script>
-
 </body>
 </html>
