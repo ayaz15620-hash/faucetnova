@@ -97,12 +97,11 @@ button:disabled {
   <div class="balance-box">
     <p>Faucet Claim</p>
     <h3>Reward: 0.0001 USDT</h3>
-    <p id="timer">60-second cooldown</p>
+    <p id="timer">Ready to claim!</p>
     <button id="claimBtn" disabled>CLAIM NOW</button>
-    <p id="claimStatus">
-      Secure claim system is not connected yet.
-    </p>
-    <p>Total claims: Unlimited</p>
+    <p id="claimStatus">Loading claim system...</p>
+    <p>Total claims: <span id="totalClaims">0</span></p>
+    <p>Unlimited total claims</p>
   </div>
 
   <p>Your FaucetNova account is connected.</p>
@@ -131,6 +130,8 @@ import {
   getDoc,
   doc,
   setDoc,
+  updateDoc,
+  runTransaction,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
@@ -157,6 +158,55 @@ const logoutBtn = document.getElementById("logoutBtn");
 const claimBtn = document.getElementById("claimBtn");
 const claimStatus = document.getElementById("claimStatus");
 const balanceDisplay = document.getElementById("balance");
+const timerDisplay = document.getElementById("timer");
+const totalClaimsDisplay = document.getElementById("totalClaims");
+
+const REWARD = 0.0001;
+const COOLDOWN = 60;
+
+let currentUser = null;
+let lastClaimMillis = null;
+let timerInterval = null;
+let claimBusy = false;
+
+function updateTimer() {
+  if (!currentUser || claimBusy) {
+    claimBtn.disabled = true;
+    return;
+  }
+
+  const remaining = lastClaimMillis
+    ? Math.max(
+        0,
+        Math.ceil(
+          (lastClaimMillis + COOLDOWN * 1000 - Date.now()) / 1000
+        )
+      )
+    : 0;
+
+  if (remaining > 0) {
+    timerDisplay.textContent =
+      "Next claim available in " + remaining + " seconds";
+    claimBtn.disabled = true;
+  } else {
+    timerDisplay.textContent = "Ready to claim!";
+    claimBtn.disabled = false;
+  }
+}
+
+function loadUserData(data) {
+  balanceDisplay.textContent =
+    Number(data.balance || 0).toFixed(4);
+
+  totalClaimsDisplay.textContent =
+    Number(data.totalClaims || 0);
+
+  lastClaimMillis = data.lastClaimAt
+    ? data.lastClaimAt.toMillis()
+    : null;
+
+  updateTimer();
+}
 
 googleBtn.addEventListener("click", async () => {
   try {
@@ -179,8 +229,101 @@ logoutBtn.addEventListener("click", async () => {
   }
 });
 
+claimBtn.addEventListener("click", async () => {
+  if (!currentUser || claimBusy) return;
+
+  claimBusy = true;
+  claimBtn.disabled = true;
+  claimStatus.textContent = "Processing your secure claim...";
+
+  try {
+    const userRef = doc(db, "users", currentUser.uid);
+
+    // Unique ID for every claim.
+    const claimId = crypto.randomUUID();
+    const claimRef = doc(db, "claims", claimId);
+
+    await runTransaction(db, async (transaction) => {
+
+      const userSnap = await transaction.get(userRef);
+
+      if (!userSnap.exists()) {
+        throw new Error("User profile not found.");
+      }
+
+      const data = userSnap.data();
+
+      if (typeof data.balance !== "number") {
+        throw new Error("Invalid balance. Please contact support.");
+      }
+
+      const previousClaim = data.lastClaimAt;
+
+      if (previousClaim) {
+        const elapsed =
+          Date.now() - previousClaim.toMillis();
+
+        if (elapsed < COOLDOWN * 1000) {
+          throw new Error("Please wait for the 60-second cooldown.");
+        }
+      }
+
+      const newBalance = Number(
+        (data.balance + REWARD).toFixed(4)
+      );
+
+      const newTotalClaims =
+        Number(data.totalClaims || 0) + 1;
+
+      // Update user balance and cooldown.
+      transaction.update(userRef, {
+        balance: newBalance,
+        totalClaims: newTotalClaims,
+        lastClaimAt: serverTimestamp(),
+        lastClaimId: claimId
+      });
+
+      // Save the matching claim record.
+      transaction.set(claimRef, {
+        uid: currentUser.uid,
+        amount: REWARD,
+        createdAt: serverTimestamp()
+      });
+    });
+
+    // Reload confirmed Firestore data.
+    const updatedSnap = await getDoc(userRef);
+
+    if (updatedSnap.exists()) {
+      loadUserData(updatedSnap.data());
+    }
+
+    claimStatus.textContent =
+      "Claim successful! 0.0001 USDT added to your balance.";
+
+  } catch (error) {
+    console.error(error);
+
+    claimStatus.textContent =
+      "Claim failed: " + error.message;
+
+  } finally {
+    claimBusy = false;
+    updateTimer();
+  }
+});
+
 onAuthStateChanged(auth, async (user) => {
+
+  currentUser = user;
+  claimBusy = false;
+
+  if (timerInterval) {
+    clearInterval(timerInterval);
+  }
+
   if (user) {
+
     login.classList.add("hidden");
     dashboard.classList.remove("hidden");
 
@@ -191,12 +334,14 @@ onAuthStateChanged(auth, async (user) => {
       user.email || "";
 
     status.textContent = "Connecting your account...";
+    claimBtn.disabled = true;
 
     try {
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
+
         await setDoc(userRef, {
           name: user.displayName || "User",
           email: user.email || "",
@@ -205,19 +350,31 @@ onAuthStateChanged(auth, async (user) => {
           createdAt: serverTimestamp()
         });
 
-        balanceDisplay.textContent = "0.0000";
+        const newSnap = await getDoc(userRef);
+        loadUserData(newSnap.data());
+
       } else {
-        const data = userSnap.data();
-        balanceDisplay.textContent =
-          Number(data.balance || 0).toFixed(4);
+        loadUserData(userSnap.data());
       }
 
-      status.textContent = "Account connected successfully!";
+      claimStatus.textContent =
+        "Secure claim system connected.";
+
+      status.textContent =
+        "Account connected successfully!";
+
+      timerInterval = setInterval(updateTimer, 1000);
+
     } catch (error) {
-      status.textContent = "Profile error: " + error.message;
+      status.textContent =
+        "Profile error: " + error.message;
+
+      claimStatus.textContent =
+        "Could not load your account.";
     }
 
   } else {
+
     login.classList.remove("hidden");
     dashboard.classList.add("hidden");
     claimBtn.disabled = true;
